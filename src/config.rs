@@ -3,15 +3,15 @@
 use crate::{error::AppError, manager::PathmapManager};
 use fancy_log::{LogLevel, log};
 use notify::{RecursiveMode, Watcher, event::EventKind};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize}; // <-- Added Serialize
 use std::{collections::HashMap, path::Path, sync::Arc};
 use tokio::fs;
-use tokio::sync::mpsc::{self, Sender}; // Corrected: Import mpsc and Sender correctly
+use tokio::sync::mpsc::{self, Sender};
 
 pub const CONFIG_PATH: &str = "/opt/namespaced/pathmap.json";
 
-// Represents the structure of the JSON configuration file.
-#[derive(Deserialize, Debug, Clone)]
+// Added Serialize to allow writing it back to a file
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct NamespacedConfig {
     #[serde(flatten)]
     pub projects: HashMap<String, String>, // project_name -> base_path
@@ -21,7 +21,6 @@ pub struct NamespacedConfig {
 pub async fn load_config() -> Result<NamespacedConfig, AppError> {
     let path = Path::new(CONFIG_PATH);
 
-    // Create default config if it doesn't exist
     if !path.exists() {
         log(
             LogLevel::Warn,
@@ -40,6 +39,13 @@ pub async fn load_config() -> Result<NamespacedConfig, AppError> {
     let content = fs::read_to_string(path).await?;
     let config: NamespacedConfig = serde_json::from_str(&content)?;
     Ok(config)
+}
+
+// New function to save the configuration to disk.
+pub async fn save_config(config: &NamespacedConfig) -> Result<(), AppError> {
+    let content = serde_json::to_string_pretty(config)?;
+    fs::write(CONFIG_PATH, content).await?;
+    Ok(())
 }
 
 // Applies the loaded configuration to the PathmapManager.
