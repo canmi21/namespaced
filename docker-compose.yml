@@ -1,0 +1,17 @@
+services:
+  lazy-mmdb:
+    image: canmi/lazy-mmdb:latest
+    container_name: lazy-mmdb
+    networks:
+      - internal
+    env_file:
+      - ./.env
+    volumes:
+      - /tmp/lazy-mmdb:/tmp/lazy-mmdb
+      - /opt/lazy-mmdb:/root/lazy-mmdb
+    restart: unless-stopped
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
