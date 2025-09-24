@@ -16,7 +16,6 @@ pub enum AppError {
     #[error("JSON error: {0}")]
     SerdeJson(#[from] serde_json::Error),
 
-    // Corrected: Store the pathmap error as a String, since the Error type itself is not public.
     #[error("Pathmap error: {0}")]
     Pathmap(String),
 
@@ -26,6 +25,9 @@ pub enum AppError {
     #[error("Project '{0}' not found")]
     ProjectNotFound(String),
 
+    #[error("Admin operation failed: {0}")]
+    AdminOperationFailed(String), // New error for admin operations
+
     #[error("Path '{0}' not found")]
     NotFound(String),
 }
@@ -33,7 +35,6 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            // Corrected: Match on the string representation of the pathmap error.
             AppError::Pathmap(err_str) => {
                 if err_str.contains("row not found") {
                     (
@@ -49,6 +50,7 @@ impl IntoResponse for AppError {
                     (StatusCode::INTERNAL_SERVER_ERROR, err_str)
                 }
             }
+            AppError::AdminOperationFailed(_) => (StatusCode::BAD_REQUEST, self.to_string()),
             AppError::ProjectNotFound(_) => (StatusCode::NOT_FOUND, self.to_string()),
             AppError::NotFound(_) => (StatusCode::NOT_FOUND, self.to_string()),
             AppError::Io(_) | AppError::SerdeJson(_) | AppError::ConfigError(_) => {
