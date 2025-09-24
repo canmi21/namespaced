@@ -1,22 +1,34 @@
 /* src/api.rs */
 
-use crate::{error::AppError, manager::PathmapManager};
+use crate::{AppState, admin, error::AppError};
 use axum::{
     Json, Router,
     extract::{Path, State},
     http::StatusCode,
-    routing::get,
+    routing::{get, put},
 };
 use serde_json::Value;
 use std::sync::Arc;
 
-type AppState = State<Arc<PathmapManager>>;
+// This type alias makes the handler signatures cleaner
+type AppStateExtractor = State<Arc<AppState>>;
 
 // Creates the main router for the application.
-pub fn create_router(manager: Arc<PathmapManager>) -> Router {
-    Router::new()
-        // Corrected: Updated path capture syntax from `:param` to `{param}`.
-        // Also chained all methods for the same path for better readability.
+pub fn create_router(state: Arc<AppState>) -> Router {
+    // Router for administrative tasks like managing projects
+    let admin_router = Router::new()
+        .route(
+            "/_namespaced/projects",
+            get(admin::list_projects).post(admin::create_project),
+        )
+        // CORRECTED: Used `{project}` instead of the old `:project` syntax.
+        .route(
+            "/_namespaced/projects/{project}",
+            put(admin::update_project).delete(admin::delete_project),
+        );
+
+    // Router for core data operations
+    let data_router = Router::new()
         .route(
             "/{project}/{path}",
             get(get_value)
@@ -24,54 +36,56 @@ pub fn create_router(manager: Arc<PathmapManager>) -> Router {
                 .put(overwrite_value)
                 .delete(delete_value),
         )
-        .route("/exists/{project}/{path}", get(check_existence))
-        .with_state(manager)
+        .route("/exists/{project}/{path}", get(check_existence));
+
+    // Combine all routers and apply the shared state, with specific routes first.
+    Router::new()
+        .merge(admin_router)
+        .merge(data_router)
+        .with_state(state)
 }
 
-// GET /{project}/{path}
+// --- Data handler functions remain the same ---
+
 async fn get_value(
-    State(manager): AppState,
+    State(state): AppStateExtractor,
     Path((project, path)): Path<(String, String)>,
 ) -> Result<Json<Value>, AppError> {
-    let value: Value = manager.get(&project, &path).await?;
+    let value: Value = state.manager.get(&project, &path).await?;
     Ok(Json(value))
 }
 
-// POST /{project}/{path}
 async fn set_value(
-    State(manager): AppState,
+    State(state): AppStateExtractor,
     Path((project, path)): Path<(String, String)>,
     Json(payload): Json<Value>,
 ) -> Result<StatusCode, AppError> {
-    manager.set(&project, &path, &payload).await?;
+    state.manager.set(&project, &path, &payload).await?;
     Ok(StatusCode::CREATED)
 }
 
-// PUT /{project}/{path}
 async fn overwrite_value(
-    State(manager): AppState,
+    State(state): AppStateExtractor,
     Path((project, path)): Path<(String, String)>,
     Json(payload): Json<Value>,
 ) -> Result<StatusCode, AppError> {
-    manager.overwrite(&project, &path, &payload).await?;
+    state.manager.overwrite(&project, &path, &payload).await?;
     Ok(StatusCode::OK)
 }
 
-// DELETE /{project}/{path}
 async fn delete_value(
-    State(manager): AppState,
+    State(state): AppStateExtractor,
     Path((project, path)): Path<(String, String)>,
 ) -> Result<StatusCode, AppError> {
-    manager.delete(&project, &path).await?;
+    state.manager.delete(&project, &path).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
-// GET /exists/{project}/{path}
 async fn check_existence(
-    State(manager): AppState,
+    State(state): AppStateExtractor,
     Path((project, path)): Path<(String, String)>,
 ) -> Result<StatusCode, AppError> {
-    let exists = manager.exists(&project, &path).await?;
+    let exists = state.manager.exists(&project, &path).await?;
     if exists {
         Ok(StatusCode::OK)
     } else {
