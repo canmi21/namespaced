@@ -14,6 +14,15 @@ name = "namespaced"
 path = "src/main.rs"
 
 [dependencies]
+axum = "0.8"
+dashmap = "6"
 dotenvy = "0.15"
 fancy-log = "0.1"
+http = "1"
 lazy-motd = "1"
+notify = "8"
+pathmap = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
