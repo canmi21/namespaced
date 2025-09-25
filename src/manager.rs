@@ -2,7 +2,7 @@
 
 use dashmap::DashMap;
 use fancy_log::{LogLevel, log};
-use pathmap::Pathmap;
+use pathmap::{Listing, Pathmap}; // Import the Listing struct
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, sync::Arc};
@@ -57,9 +57,8 @@ impl PathmapManager {
             .ok_or_else(|| AppError::ProjectNotFound(project.to_string()))
     }
 
-    // --- API Methods ---
+    // --- Data API Methods ---
 
-    // Corrected: Manually map pathmap's error to our AppError string variant.
     pub async fn get<T: DeserializeOwned>(&self, project: &str, path: &str) -> Result<T, AppError> {
         let pm = self.get_instance(project)?;
         pm.get(path)
@@ -101,6 +100,22 @@ impl PathmapManager {
     pub async fn exists(&self, project: &str, path: &str) -> Result<bool, AppError> {
         let pm = self.get_instance(project)?;
         pm.exists(path)
+            .await
+            .map_err(|e| AppError::Pathmap(e.to_string()))
+    }
+
+    // --- NEW: Listing API Methods ---
+
+    /// Lists all namespaces within a given project.
+    pub async fn list_ns(&self, project: &str) -> Result<Vec<String>, AppError> {
+        let pm = self.get_instance(project)?;
+        pm.list_ns().map_err(|e| AppError::Pathmap(e.to_string()))
+    }
+
+    /// Lists the contents (groups and values) of a path within a project.
+    pub async fn list_path(&self, project: &str, path: &str) -> Result<Listing, AppError> {
+        let pm = self.get_instance(project)?;
+        pm.list(path)
             .await
             .map_err(|e| AppError::Pathmap(e.to_string()))
     }
