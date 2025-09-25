@@ -1,17 +1,22 @@
-FROM --platform=linux/amd64 clux/muslrust:stable AS builder
+FROM rustlang/rust:nightly-slim AS builder
 
+ARG TARGETARCH
 WORKDIR /app
 COPY . .
 
 RUN unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy \
-  && apt-get update && apt-get install -y pkg-config libssl-dev
+  && apt-get update && apt-get install -y musl-tools pkg-config libssl-dev \
+  && case "$TARGETARCH" in \
+        "amd64") rustup target add x86_64-unknown-linux-musl \
+                && cargo build --release --target x86_64-unknown-linux-musl \
+                && cp target/x86_64-unknown-linux-musl/release/namespaced /app/namespaced ;; \
+        "arm64") rustup target add aarch64-unknown-linux-musl \
+                && cargo build --release --target aarch64-unknown-linux-musl \
+                && cp target/aarch64-unknown-linux-musl/release/namespaced /app/namespaced ;; \
+      esac
 
-RUN unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy \
-  && cargo build --release --target x86_64-unknown-linux-musl
-
-FROM --platform=linux/amd64 alpine:latest
-
+FROM scratch
 WORKDIR /app
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/lazy-mmdb .
+COPY --from=builder /app/namespaced ./namespaced
 
-CMD ["./lazy-mmdb"]
+CMD ["./namespaced"]
