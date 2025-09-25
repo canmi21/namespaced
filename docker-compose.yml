@@ -1,17 +1,17 @@
 services:
-  lazy-mmdb:
-    image: canmi/lazy-mmdb:latest
-    container_name: lazy-mmdb
+  namespaced:
+    image: canmi/namespaced:latest
+    container_name: namespaced
     networks:
       - internal
     env_file:
       - ./.env
+    ports:
+      - "19950:19950/tcp"
     volumes:
-      - /tmp/lazy-mmdb:/tmp/lazy-mmdb
-      - /opt/lazy-mmdb:/root/lazy-mmdb
+      - /opt/namespaced:/opt/namespaced
     restart: unless-stopped
 
 networks:
   internal:
     driver: bridge
-    internal: true
