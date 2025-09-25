@@ -2,7 +2,7 @@
 name = "namespaced"
 version = "1.0.5"
 edition = "2024"
-description = ""
+description = "A modern, API-driven configuration registry for the modern developer."
 license = "MIT"
 repository = "https://github.com/canmi21/namespaced"
 readme = "README.md"
