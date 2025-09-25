@@ -66,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // --- Start Web Server ---
     let app = create_router(app_state);
     let port = env::var("PORT")
-        .unwrap_or_else(|_| "23333".to_string())
+        .unwrap_or_else(|_| "19950".to_string())
         .parse::<u16>()?;
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
