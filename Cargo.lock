@@ -908,6 +908,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kvmap"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4669c041ce20bf34de275cd13476f3ff8a1c37d02911df9a92742df749a7305a"
+dependencies = [
+ "fancy-log",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "sqlx",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "lazy-motd"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1052,9 +1067,9 @@ dependencies = [
  "dotenvy",
  "fancy-log",
  "http",
+ "kvmap",
  "lazy-motd",
  "notify",
- "pathmap",
  "serde",
  "serde_json",
  "thiserror",
@@ -1208,21 +1223,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "pathmap"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa1069b212e0dd760f93d82bb9a6d2f99619e4c6591f9e579b7e73cff47fba32"
-dependencies = [
- "fancy-log",
- "serde",
- "serde_json",
- "shellexpand",
- "sqlx",
- "thiserror",
- "tokio",
 ]
 
 [[package]]
