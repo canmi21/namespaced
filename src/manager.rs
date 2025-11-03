@@ -2,7 +2,7 @@
 
 use dashmap::DashMap;
 use fancy_log::{LogLevel, log};
-use pathmap::{Listing, Pathmap}; // Import the Listing struct
+use kvmap::{Listing, Pathmap}; // Import the Listing struct
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, sync::Arc};
