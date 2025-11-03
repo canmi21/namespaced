@@ -1,6 +1,6 @@
 [package]
 name = "namespaced"
-version = "1.0.6"
+version = "1.0.7"
 edition = "2024"
 description = "A modern, API-driven configuration registry for the modern developer."
 license = "MIT"
